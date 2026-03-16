@@ -2,15 +2,17 @@
 #
 # Script Name: start.sh
 #
-# Version:      1.0
+# Version:      1.0.0-nodebb
 # Author:       Naoki Hirata
-# Date:         2026-03-13
-# Usage:        start.sh [-test] [--help]
-# Options:      -test      test mode execution with the latest source package
-#               --help     show this help message
-# Description:  This script builds server environment by one-liner command.
+# Date:         2026-03-16
+# Usage:        curl -fsSL <URL> | REPO_USER=<user> REPO_NAME=<repo> bash
+#               curl -fsSL <URL> | REPO_USER=<user> REPO_NAME=<repo> bash -s -- [-test] [--help]
+# Options:      -test      Use latest master branch instead of latest release tag (for testing)
+#               --help|-h  Show this help message
+# Description:  This script builds a Docker + NodeBB server environment by one-liner command.
+#               Target OS: Ubuntu 24
 # Version History:
-#               1.0  (2026-03-13) Initial release
+#               1.0.0-nodebb  (2026-03-16) Initial release
 # License:      MIT License
 
 set -e
@@ -42,7 +44,7 @@ log_step() {
 
 show_help() {
     cat <<EOF
-oneliner-docker - 1行でDockerサーバ環境構築
+docker-nodebb - NodeBB environment setup on Docker containers
 
 Usage:
   curl -fsSL https://raw.githubusercontent.com/USER/REPO/master/script/start.sh | bash
@@ -50,7 +52,7 @@ Usage:
 
 Options:
   -test      Use latest master branch instead of latest release tag (for testing)
-  --help     Show this help message
+  --help|-h  Show this help message
 
 Target OS: Ubuntu 24
 
@@ -108,7 +110,7 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
-log_step "${DIST_NAME} - START BUILDING ENVIRONMENT"
+log_step "${DIST_NAME} - START BUILDING NodeBB ENVIRONMENT"
 
 # Get test mode
 if [ "$1" == '-test' ]; then
@@ -262,4 +264,4 @@ ansible-playbook -i localhost, -c local main.yml \
   -e "default_domain_name=${DOMAIN_NAME:-example.com}" \
   -e "admin_email=${ADMIN_EMAIL}"
 
-log_step "Docker environment setup complete"
+log_step "NodeBB on Docker setup complete"
