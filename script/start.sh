@@ -233,17 +233,6 @@ if [[ -n "$DOMAIN_NAME" ]]; then
     fi
 fi
 
-# If domain name is empty, use this server's global IP
-if [[ -z "$DOMAIN_NAME" ]]; then
-    SERVER_IP=$(curl -fsSL --max-time 5 https://checkip.amazonaws.com 2>/dev/null || true)
-    if [[ -n "$SERVER_IP" ]]; then
-        DOMAIN_NAME="$SERVER_IP"
-        log_info "No domain name entered. Using server IP: ${DOMAIN_NAME}"
-    else
-        log_warn "Could not retrieve server IP. default_domain_name will be empty."
-    fi
-fi
-
 # Prompt for admin email only when domain name is entered
 ADMIN_EMAIL=""
 if [[ -n "$DOMAIN_NAME" ]]; then
@@ -260,7 +249,7 @@ cd ${WORK_DIR}/${GITHUB_REPO}/playbooks
 ansible-galaxy install -r requirements.yml
 ansible-galaxy collection install -r requirements.yml
 ansible-playbook -i localhost, -c local main.yml \
-  -e "default_domain_name=${DOMAIN_NAME}" \
+  -e "default_domain_name=${DOMAIN_NAME:-example.com}" \
   -e "admin_email=${ADMIN_EMAIL}"
 
 log_step "Docker environment setup complete"
