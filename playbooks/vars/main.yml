@@ -2,6 +2,7 @@
 # Domain configuration
 #
 default_domain_name: 'example.com'
+admin_email: ''
 
 #
 # Docker container name

@@ -5,6 +5,12 @@
     - vars/main.yml
 
   tasks:
+    - name: Debug input variables
+      ansible.builtin.debug:
+        msg:
+          - "Domain name : {{ default_domain_name }}"
+          - "Admin email : {{ admin_email }}"
+
     #
     # Create Docker container network
     #

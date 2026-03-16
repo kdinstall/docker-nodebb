@@ -185,11 +185,26 @@ find ./ -type f -name ".gitkeep" -delete
 mv "${destdirname}" "${GITHUB_REPO}"
 log_info "${filename} unarchived"
 
+# Prompt for domain name (optional)
+read -r -p "Domain name (e.g. example.com, press Enter to skip): " DOMAIN_NAME < /dev/tty
+
+# Prompt for admin email only when domain name is entered
+ADMIN_EMAIL=""
+if [[ -n "$DOMAIN_NAME" ]]; then
+    while true; do
+        read -r -p "Admin email address: " ADMIN_EMAIL < /dev/tty
+        [[ "$ADMIN_EMAIL" =~ ^[^@]+@[^@]+\.[^@]+$ ]] && break
+        log_warn "Please enter a valid email address."
+    done
+fi
+
 # launch ansible
 log_step "Running Ansible playbook"
 cd ${WORK_DIR}/${GITHUB_REPO}/playbooks
 ansible-galaxy install -r requirements.yml
 ansible-galaxy collection install -r requirements.yml
-ansible-playbook -i localhost, -c local main.yml
+ansible-playbook -i localhost, -c local main.yml \
+  -e "default_domain_name=${DOMAIN_NAME}" \
+  -e "admin_email=${ADMIN_EMAIL}"
 
 log_step "Docker environment setup complete"
