@@ -187,6 +187,8 @@ log_info "${filename} unarchived"
 
 # Prompt for domain name (optional)
 read -r -p "Domain name (e.g. example.com, press Enter to skip): " DOMAIN_NAME < /dev/tty
+DOMAIN_NAME="${DOMAIN_NAME//$'\r'/}"
+DOMAIN_NAME="${DOMAIN_NAME// /}"
 
 # DNS check for entered domain name
 if [[ -n "$DOMAIN_NAME" ]]; then
