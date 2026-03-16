@@ -190,6 +190,6 @@ log_step "Running Ansible playbook"
 cd ${WORK_DIR}/${GITHUB_REPO}/playbooks
 ansible-galaxy install -r requirements.yml
 ansible-galaxy collection install -r requirements.yml
-ansible-playbook -i localhost, main.yml
+ansible-playbook -i localhost, -c local main.yml
 
 log_step "Docker environment setup complete"
