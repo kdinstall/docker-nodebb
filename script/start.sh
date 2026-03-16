@@ -96,7 +96,6 @@ if [ "${DIST_NAME}" == '' ]; then
 fi
 
 # Define fixed parameters
-readonly PLAYBOOK="docker"
 readonly WORK_DIR=/root/${GITHUB_REPO}_work
 readonly INSTALL_PACKAGE_CMD="apt -y install"
 
@@ -175,7 +174,9 @@ for file in $savefilelist; do
 done
 
 # Get archive directory name
+set +o pipefail
 destdir=$(tar tzf "${filepath}" | head -n 1)
+set -o pipefail
 destdirname=$(basename "$destdir")
 
 # Unarchive repository
@@ -186,7 +187,7 @@ log_info "${filename} unarchived"
 
 # launch ansible
 log_step "Running Ansible playbook"
-cd ${WORK_DIR}/${GITHUB_REPO}/playbooks/${PLAYBOOK}
+cd ${WORK_DIR}/${GITHUB_REPO}/playbooks
 ansible-galaxy install --role-file=requirements.yml
 ansible-playbook -i localhost, main.yml
 
