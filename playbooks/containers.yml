@@ -1,0 +1,33 @@
+---
+- hosts: all
+  become: true
+  vars_files:
+    - vars/main.yml
+
+  tasks:
+    #
+    # Create Docker container network
+    #
+    - name: Create a network
+      docker_network:
+        name: local-network
+
+    - name: Create Docker container(redis)
+      import_tasks: ./tasks/redis.yml
+
+    - name: Create Docker container(mariadb)
+      import_tasks: ./tasks/mariadb.yml
+
+    - name: Create Docker container(nginx)
+      import_tasks: ./tasks/nginx.yml
+
+    - name: Deploy Astro application(ufcal)
+      import_tasks: ./tasks/app.yml
+
+    - name: Create Docker container(nodejs)
+      import_tasks: ./tasks/nodejs.yml
+
+    - name: Restart nginx container to apply all changes
+      docker_container:
+        name: "{{ docker_container_nginx }}"
+        restart: yes

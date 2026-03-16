@@ -1,0 +1,29 @@
+---
+- hosts: all
+  become: true
+  vars_files:
+    - vars/main.yml
+
+  roles:
+    # Docker environment
+    - geerlingguy.docker
+
+  tasks:
+    - name: Install minimal command
+      package:
+        name:
+          - zip
+          - unzip
+          - inotify-tools
+          - mailutils # for email test
+
+    - name: Create Japanese environment
+      import_tasks: ./tasks/japanese.yml
+
+    - name: Create Docker host config root directory
+      file:
+        path: '{{ docker_host_config_root }}'
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'

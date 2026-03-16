@@ -1,0 +1,15 @@
+---
+#
+# Astro アプリケーションのソースを配置
+#
+- name: Copy Nodejs application
+  copy: src='./app' dest='{{ docker_host_config_root }}' force=no
+
+- name: Set permissions on app directory
+  file:
+    path: '{{ docker_host_config_root }}/app'
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+    recurse: yes

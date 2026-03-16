@@ -1,0 +1,17 @@
+{
+  "name": "express-sample-app",
+  "version": "1.0.0",
+  "description": "Simple Express sample application",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "build": "echo 'No build step required'",
+    "start": "node src/index.js"
+  },
+  "keywords": ["express", "nodejs", "rest-api"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}

@@ -1,0 +1,38 @@
+#
+# Domain configuration
+#
+default_domain_name: 'example.com'
+
+#
+# Docker container name
+#
+docker_container_node: nodejs
+docker_container_db: mariadb
+docker_container_redis: redis
+docker_container_nginx: nginx
+docker_container_certbot: certbot
+
+#
+# Docker container configuration
+#
+docker_container_timezone: Asia/Tokyo
+docker_container_app_path: /app
+docker_container_node_version: 24
+
+#
+# Docker host configuration
+#
+docker_host_config_root: /docker
+
+#
+# Docker application configuration
+#
+www_document_root: '{{ docker_host_config_root }}/public_html' # WWWドキュメントルート
+
+#
+# DB configuration
+#
+db_root_password: root_password
+main_db_name: sample-db
+main_db_user: sample_user
+main_db_password: sample_password
