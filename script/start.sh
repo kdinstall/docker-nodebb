@@ -188,6 +188,62 @@ log_info "${filename} unarchived"
 # Prompt for domain name (optional)
 read -r -p "Domain name (e.g. example.com, press Enter to skip): " DOMAIN_NAME < /dev/tty
 
+# DNS check for entered domain name
+if [[ -n "$DOMAIN_NAME" ]]; then
+    log_step "Checking DNS for ${DOMAIN_NAME}"
+
+    _dns_ok=true
+    _dns_error_msg=""
+
+    # Get this server's global IP
+    SERVER_IP=$(curl -fsSL --max-time 5 https://checkip.amazonaws.com 2>/dev/null || true)
+    if [[ -z "$SERVER_IP" ]]; then
+        _dns_ok=false
+        _dns_error_msg="Could not retrieve this server's global IP address."
+    fi
+
+    # Resolve domain IP
+    if $_dns_ok; then
+        DOMAIN_IP=$(getent hosts "$DOMAIN_NAME" 2>/dev/null | awk '{print $1}' | head -n 1)
+        if [[ -z "$DOMAIN_IP" ]]; then
+            _dns_ok=false
+            _dns_error_msg="Could not resolve domain: ${DOMAIN_NAME}. Please check your DNS A record."
+        fi
+    fi
+
+    # Compare IPs
+    if $_dns_ok && [[ "$SERVER_IP" != "$DOMAIN_IP" ]]; then
+        _dns_ok=false
+        _dns_error_msg="DNS mismatch: ${DOMAIN_NAME} -> ${DOMAIN_IP} (this server: ${SERVER_IP})"
+    fi
+
+    # On error: ask user to continue or exit
+    if ! $_dns_ok; then
+        log_error "${_dns_error_msg}"
+        while true; do
+            read -r -p "Continue anyway? [y/N]: " _ans < /dev/tty
+            case "${_ans}" in
+                [yY]) log_warn "Continuing despite DNS error."; break ;;
+                [nN]|"") log_info "Installation aborted by user."; exit 0 ;;
+                *) log_warn "Please enter y or n." ;;
+            esac
+        done
+    else
+        log_info "DNS check passed: ${DOMAIN_NAME} -> ${SERVER_IP}"
+    fi
+fi
+
+# If domain name is empty, use this server's global IP
+if [[ -z "$DOMAIN_NAME" ]]; then
+    SERVER_IP=$(curl -fsSL --max-time 5 https://checkip.amazonaws.com 2>/dev/null || true)
+    if [[ -n "$SERVER_IP" ]]; then
+        DOMAIN_NAME="$SERVER_IP"
+        log_info "No domain name entered. Using server IP: ${DOMAIN_NAME}"
+    else
+        log_warn "Could not retrieve server IP. default_domain_name will be empty."
+    fi
+fi
+
 # Prompt for admin email only when domain name is entered
 ADMIN_EMAIL=""
 if [[ -n "$DOMAIN_NAME" ]]; then
