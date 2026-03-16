@@ -197,11 +197,13 @@ if [[ -n "$DOMAIN_NAME" ]]; then
     _dns_ok=true
     _dns_error_msg=""
 
-    # Get this server's global IP
-    SERVER_IP=$(curl -fsSL --max-time 5 https://checkip.amazonaws.com 2>/dev/null || true)
-    if [[ -z "$SERVER_IP" ]]; then
+    # Get all IPs assigned to this server (local + global)
+    _local_ips=$(hostname -I 2>/dev/null || true)
+    _global_ip=$(curl -fsSL --max-time 5 https://checkip.amazonaws.com 2>/dev/null || true)
+    SERVER_IPS="${_local_ips} ${_global_ip}"
+    if [[ -z "${SERVER_IPS// /}" ]]; then
         _dns_ok=false
-        _dns_error_msg="Could not retrieve this server's global IP address."
+        _dns_error_msg="Could not retrieve this server's IP addresses."
     fi
 
     # Resolve domain IP
@@ -213,10 +215,16 @@ if [[ -n "$DOMAIN_NAME" ]]; then
         fi
     fi
 
-    # Compare IPs
-    if $_dns_ok && [[ "$SERVER_IP" != "$DOMAIN_IP" ]]; then
-        _dns_ok=false
-        _dns_error_msg="DNS mismatch: ${DOMAIN_NAME} -> ${DOMAIN_IP} (this server: ${SERVER_IP})"
+    # Compare domain IP against all server IPs
+    if $_dns_ok; then
+        _match=false
+        for _ip in ${SERVER_IPS}; do
+            [[ "$_ip" == "$DOMAIN_IP" ]] && _match=true && break
+        done
+        if ! $_match; then
+            _dns_ok=false
+            _dns_error_msg="DNS mismatch: ${DOMAIN_NAME} -> ${DOMAIN_IP} (server IPs: ${SERVER_IPS})"
+        fi
     fi
 
     # On error: ask user to continue or exit
@@ -231,7 +239,7 @@ if [[ -n "$DOMAIN_NAME" ]]; then
             esac
         done
     else
-        log_info "DNS check passed: ${DOMAIN_NAME} -> ${SERVER_IP}"
+        log_info "DNS check passed: ${DOMAIN_NAME} -> ${DOMAIN_IP}"
     fi
 fi
 
