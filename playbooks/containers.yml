@@ -11,6 +11,17 @@
           - "Domain name : {{ default_domain_name }}"
           - "Admin email : {{ admin_email }}"
 
+    - name: Install minimal command
+      package:
+        name:
+          - zip
+          - unzip
+          - inotify-tools
+          - mailutils # for email test
+
+    - name: Create Japanese environment
+      import_tasks: ./tasks/japanese.yml
+
     #
     # Create Docker container network
     #
@@ -21,17 +32,22 @@
     - name: Create Docker container(redis)
       import_tasks: ./tasks/redis.yml
 
-    - name: Create Docker container(mariadb)
-      import_tasks: ./tasks/mariadb.yml
+    - name: Create Docker container(mongodb)
+      import_tasks: ./tasks/mongodb.yml
 
     - name: Create Docker container(nginx)
       import_tasks: ./tasks/nginx.yml
 
-    - name: Deploy Astro application(ufcal)
-      import_tasks: ./tasks/app.yml
+    - name: Create Docker container(certbot)
+      import_tasks: ./tasks/certbot.yml
+      when: certbot_enabled
 
-    - name: Create Docker container(nodejs)
-      import_tasks: ./tasks/nodejs.yml
+    - name: Create Docker container(nodebb)
+      import_tasks: ./tasks/nodebb.yml
+
+    - name: Initialize Certbot
+      shell: docker container start certbot
+      when: certbot_enabled | default(true)
 
     - name: Restart nginx container to apply all changes
       docker_container:

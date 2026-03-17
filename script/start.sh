@@ -316,8 +316,20 @@ log_step "Running Ansible playbook"
 cd ${WORK_DIR}/${GITHUB_REPO}/playbooks
 ansible-galaxy install -r requirements.yml
 ansible-galaxy collection install -r requirements.yml
+
+# Set certbot configuration based on domain name
+if [[ -n "$DOMAIN_NAME" ]]; then
+    CERTBOT_ENABLED=true
+    CERTBOT_EMAIL="${ADMIN_EMAIL}"
+else
+    CERTBOT_ENABLED=false
+    CERTBOT_EMAIL=""
+fi
+
 ansible-playbook -i localhost, -c local main.yml \
   -e "default_domain_name=${DOMAIN_NAME:-example.com}" \
-  -e "admin_email=${ADMIN_EMAIL}"
+  -e "admin_email=${ADMIN_EMAIL}" \
+  -e "certbot_enabled=${CERTBOT_ENABLED}" \
+  -e "certbot_email=${CERTBOT_EMAIL}"
 
 log_step "NodeBB on Docker setup complete"

@@ -1,14 +1,21 @@
 #
-# Domain configuration
+# Domain configuration(Default values)
 #
 default_domain_name: 'example.com'
 admin_email: ''
 
 #
+# Certbot configuration
+#
+certbot_enabled: false  # Certbot機能の有効化/無効化
+certbot_test_cert: 0  # Certbot実行モード(0=正式モード,1=テストモード)
+certbot_email: ''  # Let's Encrypt連絡受信用
+
+#
 # Docker container name
 #
-docker_container_node: nodejs
-docker_container_db: mariadb
+docker_container_nodebb: nodebb
+docker_container_db: mongodb
 docker_container_redis: redis
 docker_container_nginx: nginx
 docker_container_certbot: certbot
@@ -17,12 +24,6 @@ docker_container_certbot: certbot
 # Docker container configuration
 #
 docker_container_timezone: Asia/Tokyo
-docker_container_app_path: /app
-docker_container_node_version: 24
-
-#
-# Docker host configuration
-#
 docker_host_config_root: /docker
 
 #
@@ -31,9 +32,16 @@ docker_host_config_root: /docker
 www_document_root: '{{ docker_host_config_root }}/public_html' # WWWドキュメントルート
 
 #
-# DB configuration
+# DB configuration (NodeBB)
 #
+database_root_user: root
 db_root_password: root_password
-main_db_name: sample-db
-main_db_user: sample_user
-main_db_password: sample_password
+main_db_name: nodebb
+main_db_user: nodebb
+main_db_password: nodebb_password
+
+#
+# NodeBB configuration
+#
+nodebb_url: "https://{{ default_domain_name }}"
+nodebb_secret: "change-this-secret-in-production"
