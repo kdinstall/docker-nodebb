@@ -43,11 +43,25 @@ curl -fsSL https://raw.githubusercontent.com/kdinstall/docker-nodebb/master/scri
 > **注意:** デフォルトでは GitHub の最新リリースタグが自動的に取得・使用されます。  
 > 開発中の最新コードを使いたい場合は、後述のテスト実行コマンドを使用してください。
 
+### 設定の永続化
+
+初回実行時にドメイン名とメールアドレスを入力すると、`/etc/kdinstall/config` に保存されます。  
+2回目以降の実行では、保存された設定が自動的に読み込まれ、確認メッセージが表示されます。
+
+```bash
+# 2回目以降は保存された設定を使用
+curl -fsSL https://raw.githubusercontent.com/kdinstall/docker-nodebb/master/script/start.sh | REPO_USER=kdinstall REPO_NAME=docker-nodebb bash
+
+# 設定を変更したい場合
+curl -fsSL https://raw.githubusercontent.com/kdinstall/docker-nodebb/master/script/start.sh | REPO_USER=kdinstall REPO_NAME=docker-nodebb bash -s -- --reconfigure
+```
+
 オプション（`bash -s --` 経由で渡す）:
 
 | オプション | 説明 |
 |---|---------|
 | `--help` | ヘルプを表示 |
+| `--reconfigure` | 保存された設定を無視して再入力 |
 
 ## テスト実行
 

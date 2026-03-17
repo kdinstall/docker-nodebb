@@ -6,9 +6,10 @@
 # Author:       Naoki Hirata
 # Date:         2026-03-16
 # Usage:        curl -fsSL <URL> | REPO_USER=<user> REPO_NAME=<repo> bash
-#               curl -fsSL <URL> | REPO_USER=<user> REPO_NAME=<repo> bash -s -- [-test] [--help]
-# Options:      -test      Use latest master branch instead of latest release tag (for testing)
-#               --help|-h  Show this help message
+#               curl -fsSL <URL> | REPO_USER=<user> REPO_NAME=<repo> bash -s -- [-test] [--help] [--reconfigure]
+# Options:      -test          Use latest master branch instead of latest release tag (for testing)
+#               --help|-h      Show this help message
+#               --reconfigure  Re-enter configuration values (ignore saved config)
 # Description:  This script builds a Docker + NodeBB server environment by one-liner command.
 #               Target OS: Ubuntu 24
 # Version History:
@@ -48,23 +49,51 @@ docker-nodebb - NodeBB environment setup on Docker containers
 
 Usage:
   curl -fsSL https://raw.githubusercontent.com/USER/REPO/master/script/start.sh | bash
-  curl -fsSL ... | bash -s -- [-test] [--help]
+  curl -fsSL ... | bash -s -- [-test] [--help] [--reconfigure]
 
 Options:
-  -test      Use latest master branch instead of latest release tag (for testing)
-  --help|-h  Show this help message
+  -test          Use latest master branch instead of latest release tag (for testing)
+  --help|-h      Show this help message
+  --reconfigure  Re-enter configuration values (ignore saved config)
 
 Target OS: Ubuntu 24
 
 EOF
 }
 
-# Parse --help before other checks
+# Load saved configuration
+load_config() {
+    if [ -f "$CONFIG_FILE" ]; then
+        # shellcheck source=/dev/null
+        source "$CONFIG_FILE"
+        return 0
+    fi
+    return 1
+}
+
+# Save configuration to file
+save_config() {
+    mkdir -p "$(dirname "$CONFIG_FILE")"
+    cat > "$CONFIG_FILE" <<EOF
+# kdinstall configuration file
+# Created: $(date)
+DOMAIN_NAME="$DOMAIN_NAME"
+ADMIN_EMAIL="$ADMIN_EMAIL"
+EOF
+    chmod 600 "$CONFIG_FILE"
+    log_info "Configuration saved to $CONFIG_FILE"
+}
+
+# Parse options before other checks
+RECONFIGURE=false
 for arg in "$@"; do
     case "$arg" in
         --help|-h)
             show_help
             exit 0
+            ;;
+        --reconfigure)
+            RECONFIGURE=true
             ;;
     esac
 done
@@ -98,6 +127,7 @@ if [ "${DIST_NAME}" == '' ]; then
 fi
 
 # Define fixed parameters
+readonly CONFIG_FILE="/etc/kdinstall/config"
 readonly WORK_DIR=/root/${GITHUB_REPO}_work
 readonly INSTALL_PACKAGE_CMD="apt -y install"
 
@@ -187,13 +217,35 @@ find ./ -type f -name ".gitkeep" -delete
 mv "${destdirname}" "${GITHUB_REPO}"
 log_info "${filename} unarchived"
 
-# Prompt for domain name (optional)
-read -r -p "Domain name (e.g. example.com, press Enter to skip): " DOMAIN_NAME < /dev/tty
-DOMAIN_NAME="${DOMAIN_NAME//$'\r'/}"
-DOMAIN_NAME="${DOMAIN_NAME// /}"
+# Configuration management
+DOMAIN_NAME=""
+ADMIN_EMAIL=""
+CONFIG_LOADED=false
+
+# Load existing configuration
+if load_config && [ "$RECONFIGURE" = false ]; then
+    CONFIG_LOADED=true
+    log_step "Previous configuration found"
+    log_info "  Domain: ${DOMAIN_NAME:-<not set>}"
+    log_info "  Email:  ${ADMIN_EMAIL:-<not set>}"
+    echo
+    read -r -p "Use this configuration? [Y/n]: " USE_PREV < /dev/tty
+    if [[ "$USE_PREV" =~ ^[nN] ]]; then
+        CONFIG_LOADED=false
+        RECONFIGURE=true
+    fi
+fi
+
+# Prompt for configuration if needed
+if [ "$CONFIG_LOADED" = false ]; then
+    # Prompt for domain name (optional)
+    read -r -p "Domain name (e.g. example.com, press Enter to skip): " DOMAIN_NAME < /dev/tty
+    DOMAIN_NAME="${DOMAIN_NAME//$'\r'/}"
+    DOMAIN_NAME="${DOMAIN_NAME// /}"
+fi
 
 # DNS check for entered domain name
-if [[ -n "$DOMAIN_NAME" ]]; then
+if [[ -n "$DOMAIN_NAME" ]] && [ "$CONFIG_LOADED" = false ]; then
     log_step "Checking DNS for ${DOMAIN_NAME}"
 
     _dns_ok=true
@@ -245,14 +297,18 @@ if [[ -n "$DOMAIN_NAME" ]]; then
     fi
 fi
 
-# Prompt for admin email only when domain name is entered
-ADMIN_EMAIL=""
-if [[ -n "$DOMAIN_NAME" ]]; then
+# Prompt for admin email only when domain name is entered and config not loaded
+if [[ -n "$DOMAIN_NAME" ]] && [ "$CONFIG_LOADED" = false ]; then
     while true; do
         read -r -p "Admin email address: " ADMIN_EMAIL < /dev/tty
         [[ "$ADMIN_EMAIL" =~ ^[^@]+@[^@]+\.[^@]+$ ]] && break
         log_warn "Please enter a valid email address."
     done
+fi
+
+# Save configuration for future use
+if [ "$CONFIG_LOADED" = false ]; then
+    save_config
 fi
 
 # launch ansible
