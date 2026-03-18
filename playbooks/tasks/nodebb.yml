@@ -65,11 +65,18 @@
   copy:
     src: '{{ docker_host_config_root }}/temp/nodebb-ja-source/public/language/ja'
     dest: '{{ docker_host_config_root }}/nodebb/language/'
-    owner: '1001'
-    group: '1001'
     mode: '0644'
     directory_mode: '0755'
     remote_src: yes
+
+# remote_src での copy は深い階層の所有者設定が不完全なため、明示的に chown を実行
+- name: Set ownership for all Japanese language files recursively
+  file:
+    path: '{{ docker_host_config_root }}/nodebb/language/ja'
+    owner: '1001'
+    group: '1001'
+    recurse: yes
+    state: directory
 
 - name: Create NodeBB setup.json
   template:
