@@ -28,13 +28,28 @@
     - welcome.md
     - footer.json
 
+#
+# 日本語リソースを czbone/NodeBB リポジトリから取得
+# 参照: https://github.com/czbone/NodeBB (master)
+#
+- name: Clone czbone/NodeBB repository for Japanese resources
+  git:
+    repo: 'https://github.com/czbone/NodeBB.git'
+    dest: '{{ docker_host_config_root }}/temp/nodebb-ja-source'
+    version: master
+    force: yes
+    depth: 1
+  register: git_clone_result
+
 # language/ja を直接コピー（language 全体だと copy の挙動で language/language/ja になるため）
-- name: Copy Japanese language resources
+# GitHubリポジトリからクローンした public/language/ja を使用
+- name: Copy Japanese language resources from cloned repository
   copy:
-    src: '{{ playbook_dir }}/containers/nodebb/language/ja'
+    src: '{{ docker_host_config_root }}/temp/nodebb-ja-source/public/language/ja'
     dest: '{{ docker_host_config_root }}/nodebb/language/'
     mode: '0644'
     directory_mode: '0755'
+    remote_src: yes
 
 - name: Create NodeBB setup.json
   template:
