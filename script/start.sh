@@ -304,6 +304,16 @@ if [[ -n "$DOMAIN_NAME" ]] && [ "$CONFIG_LOADED" = false ]; then
     done
 fi
 
+# Set certbot configuration based on whether domain name was entered by user
+# This must be set BEFORE auto-detecting IP address
+if [[ -n "$DOMAIN_NAME" ]]; then
+    CERTBOT_ENABLED=true
+    CERTBOT_EMAIL="${ADMIN_EMAIL}"
+else
+    CERTBOT_ENABLED=false
+    CERTBOT_EMAIL=""
+fi
+
 # Auto-detect IP address if domain name is not provided
 if [[ -z "$DOMAIN_NAME" ]]; then
     log_step "No domain name provided. Auto-detecting IP address..."
@@ -336,15 +346,6 @@ log_step "Running Ansible playbook"
 cd ${WORK_DIR}/${GITHUB_REPO}/playbooks
 ansible-galaxy install -r requirements.yml
 ansible-galaxy collection install -r requirements.yml
-
-# Set certbot configuration based on domain name
-if [[ -n "$DOMAIN_NAME" ]]; then
-    CERTBOT_ENABLED=true
-    CERTBOT_EMAIL="${ADMIN_EMAIL}"
-else
-    CERTBOT_ENABLED=false
-    CERTBOT_EMAIL=""
-fi
 
 ansible-playbook -i localhost, -c local main.yml \
   -e "default_domain_name=${DOMAIN_NAME}" \
