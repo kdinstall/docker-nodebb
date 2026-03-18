@@ -244,7 +244,7 @@ if [ "$CONFIG_LOADED" = false ]; then
     DOMAIN_NAME="${DOMAIN_NAME// /}"
 fi
 
-# DNS check for entered domain name
+# DNS check and admin email prompt for entered domain name
 if [[ -n "$DOMAIN_NAME" ]] && [ "$CONFIG_LOADED" = false ]; then
     log_step "Checking DNS for ${DOMAIN_NAME}"
 
@@ -295,6 +295,13 @@ if [[ -n "$DOMAIN_NAME" ]] && [ "$CONFIG_LOADED" = false ]; then
     else
         log_info "DNS check passed: ${DOMAIN_NAME} -> ${DOMAIN_IP}"
     fi
+
+    # Prompt for admin email
+    while true; do
+        read -r -p "Admin email address: " ADMIN_EMAIL < /dev/tty
+        [[ "$ADMIN_EMAIL" =~ ^[^@]+@[^@]+\.[^@]+$ ]] && break
+        log_warn "Please enter a valid email address."
+    done
 fi
 
 # Auto-detect IP address if domain name is not provided
@@ -317,15 +324,6 @@ if [[ -z "$DOMAIN_NAME" ]]; then
         log_error "Could not detect IP address. Please specify a domain name."
         exit 1
     fi
-fi
-
-# Prompt for admin email only when domain name is entered and config not loaded
-if [[ -n "$DOMAIN_NAME" ]] && [ "$CONFIG_LOADED" = false ]; then
-    while true; do
-        read -r -p "Admin email address: " ADMIN_EMAIL < /dev/tty
-        [[ "$ADMIN_EMAIL" =~ ^[^@]+@[^@]+\.[^@]+$ ]] && break
-        log_warn "Please enter a valid email address."
-    done
 fi
 
 # Save configuration for future use
