@@ -57,7 +57,7 @@
       -addext "subjectAltName=DNS:{{ default_domain_name }}" \
       -addext "extendedKeyUsage=serverAuth"
     chdir: '{{ docker_host_config_root }}/letsencrypt/conf/live/{{ default_domain_name }}'
-  when: not ssl_file.stat.exists and not (default_domain_name | regex_search('^[0-9.]+$'))
+  when: not ssl_file.stat.exists and (certbot_enabled | default(false) | bool)
 
 - name: Generate SSL key and CRT file (for IP address)
   shell:
@@ -69,7 +69,7 @@
       -addext "subjectAltName=IP:{{ default_domain_name }}" \
       -addext "extendedKeyUsage=serverAuth"
     chdir: '{{ docker_host_config_root }}/letsencrypt/conf/live/{{ default_domain_name }}'
-  when: not ssl_file.stat.exists and (default_domain_name | regex_search('^[0-9.]+$'))
+  when: not ssl_file.stat.exists and not (certbot_enabled | default(false) | bool)
 
 - name: Create build directory
   file:
