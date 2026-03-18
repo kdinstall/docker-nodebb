@@ -319,7 +319,8 @@ if [[ -z "$DOMAIN_NAME" ]]; then
     log_step "No domain name provided. Auto-detecting IP address..."
     
     # Try to detect private IP (192.168.x.x) first
-    DETECTED_IP=$(hostname -I 2>/dev/null | tr ' ' '\n' | grep -E '^192\.168\.' | head -n 1)
+    #DETECTED_IP=$(hostname -I 2>/dev/null | tr ' ' '\n' | grep -E '^192\.168\.' | head -n 1)
+    DETECTED_IP=$(hostname -I 2>/dev/null | tr ' ' '\n' | head -n 1)
     
     # If no private IP, use default IP
     if [[ -z "$DETECTED_IP" ]]; then
