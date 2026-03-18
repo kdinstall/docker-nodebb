@@ -47,7 +47,7 @@
   stat:
     path: '{{ docker_host_config_root }}/letsencrypt/conf/live/{{ default_domain_name }}/privkey.pem'
   register: ssl_file
-- name: Generate SSL key and CRT file
+- name: Generate SSL key and CRT file (for domain name)
   shell:
     cmd: |
       openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -nodes \
@@ -57,7 +57,19 @@
       -addext "subjectAltName=DNS:{{ default_domain_name }}" \
       -addext "extendedKeyUsage=serverAuth"
     chdir: '{{ docker_host_config_root }}/letsencrypt/conf/live/{{ default_domain_name }}'
-  when: not ssl_file.stat.exists
+  when: not ssl_file.stat.exists and not (default_domain_name | regex_search('^[0-9.]+$'))
+
+- name: Generate SSL key and CRT file (for IP address)
+  shell:
+    cmd: |
+      openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -nodes \
+      -keyout "privkey.pem" \
+      -out "fullchain.pem" \
+      -subj "/CN={{ default_domain_name }}" \
+      -addext "subjectAltName=IP:{{ default_domain_name }}" \
+      -addext "extendedKeyUsage=serverAuth"
+    chdir: '{{ docker_host_config_root }}/letsencrypt/conf/live/{{ default_domain_name }}'
+  when: not ssl_file.stat.exists and (default_domain_name | regex_search('^[0-9.]+$'))
 
 - name: Create build directory
   file:

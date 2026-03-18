@@ -297,6 +297,28 @@ if [[ -n "$DOMAIN_NAME" ]] && [ "$CONFIG_LOADED" = false ]; then
     fi
 fi
 
+# Auto-detect IP address if domain name is not provided
+if [[ -z "$DOMAIN_NAME" ]]; then
+    log_step "No domain name provided. Auto-detecting IP address..."
+    
+    # Try to detect private IP (192.168.x.x) first
+    DETECTED_IP=$(hostname -I 2>/dev/null | tr ' ' '\n' | grep -E '^192\.168\.' | head -n 1)
+    
+    # If no private IP, use default IP
+    if [[ -z "$DETECTED_IP" ]]; then
+        DETECTED_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
+    fi
+    
+    if [[ -n "$DETECTED_IP" ]]; then
+        DOMAIN_NAME="${DETECTED_IP}"
+        log_info "Using IP address: ${DETECTED_IP}"
+        log_warn "Note: Self-signed certificate will be used (Let's Encrypt is disabled for IP addresses)"
+    else
+        log_error "Could not detect IP address. Please specify a domain name."
+        exit 1
+    fi
+fi
+
 # Prompt for admin email only when domain name is entered and config not loaded
 if [[ -n "$DOMAIN_NAME" ]] && [ "$CONFIG_LOADED" = false ]; then
     while true; do
@@ -327,7 +349,7 @@ else
 fi
 
 ansible-playbook -i localhost, -c local main.yml \
-  -e "default_domain_name=${DOMAIN_NAME:-example.com}" \
+  -e "default_domain_name=${DOMAIN_NAME}" \
   -e "admin_email=${ADMIN_EMAIL}" \
   -e "certbot_enabled=${CERTBOT_ENABLED}" \
   -e "certbot_email=${CERTBOT_EMAIL}"
