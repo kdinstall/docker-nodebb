@@ -53,6 +53,15 @@
     depth: 1
   register: git_clone_result
 
+# Gitクローンしたファイルの所有者を変更（remote_srcでのコピー前に必要）
+- name: Change ownership of cloned files
+  file:
+    path: '{{ docker_host_config_root }}/temp/nodebb-ja-source'
+    owner: '1001'
+    group: '1001'
+    recurse: yes
+    state: directory
+
 # language/ja を直接コピー（language 全体だと copy の挙動で language/language/ja になるため）
 # GitHubリポジトリからクローンした public/language/ja を使用
 # 既存ディレクトリを削除して強制的に再コピー
