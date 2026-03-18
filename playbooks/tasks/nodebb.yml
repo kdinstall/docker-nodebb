@@ -22,6 +22,8 @@
   copy:
     src: '{{ playbook_dir }}/containers/nodebb/install-data/{{ item }}'
     dest: '{{ docker_host_config_root }}/nodebb/install-data/{{ item }}'
+    owner: '1001'
+    group: '1001'
     mode: '0644'
   loop:
     - categories.json
@@ -47,6 +49,8 @@
   copy:
     src: '{{ docker_host_config_root }}/temp/nodebb-ja-source/public/language/ja'
     dest: '{{ docker_host_config_root }}/nodebb/language/'
+    owner: '1001'
+    group: '1001'
     mode: '0644'
     directory_mode: '0755'
     remote_src: yes
