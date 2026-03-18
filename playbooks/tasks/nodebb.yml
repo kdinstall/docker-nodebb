@@ -18,6 +18,16 @@
     - '{{ docker_host_config_root }}/nodebb/install-data'
     - '{{ docker_host_config_root }}/nodebb/language'
 
+# 既存のインストールデータを削除して強制的に再コピー
+- name: Remove existing install data files
+  file:
+    path: '{{ docker_host_config_root }}/nodebb/install-data/{{ item }}'
+    state: absent
+  loop:
+    - categories.json
+    - welcome.md
+    - footer.json
+
 - name: Copy Japanese install data files
   copy:
     src: '{{ playbook_dir }}/containers/nodebb/install-data/{{ item }}'
@@ -45,6 +55,12 @@
 
 # language/ja を直接コピー（language 全体だと copy の挙動で language/language/ja になるため）
 # GitHubリポジトリからクローンした public/language/ja を使用
+# 既存ディレクトリを削除して強制的に再コピー
+- name: Remove existing Japanese language directory
+  file:
+    path: '{{ docker_host_config_root }}/nodebb/language/ja'
+    state: absent
+
 - name: Copy Japanese language resources from cloned repository
   copy:
     src: '{{ docker_host_config_root }}/temp/nodebb-ja-source/public/language/ja'
