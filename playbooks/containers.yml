@@ -40,14 +40,14 @@
 
     - name: Create Docker container(certbot)
       import_tasks: ./tasks/certbot.yml
-      when: certbot_enabled
+      when: certbot_enabled | bool
 
     - name: Create Docker container(nodebb)
       import_tasks: ./tasks/nodebb.yml
 
     - name: Initialize Certbot
       shell: docker container start certbot
-      when: certbot_enabled | default(true)
+      when: certbot_enabled | default(false) | bool
 
     - name: Restart nginx container to apply all changes
       docker_container:
