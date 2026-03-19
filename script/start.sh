@@ -324,13 +324,15 @@ fi
 if [[ -z "$DOMAIN_NAME" ]]; then
     log_step "No domain name provided. Auto-detecting IP address..."
     
-    # Try to detect private IP (192.168.x.x) first
-    DETECTED_IP=$(hostname -I 2>/dev/null | tr ' ' '\n' | grep -E '^192\.168\.' | head -n 1)
-    #DETECTED_IP=$(hostname -I 2>/dev/null | tr ' ' '\n' | head -n 1)
+    # Get all IPs from hostname -I
+    ALL_IPS=$(hostname -I 2>/dev/null | xargs)
     
-    # If no private IP, use default IP
+    # Try to detect private IP (192.168.x.x) first
+    DETECTED_IP=$(echo "${ALL_IPS}" | tr ' ' '\n' | grep -E '^192\.168\.' | head -n 1 | xargs)
+    
+    # If no private IP, use the first available IP
     if [[ -z "$DETECTED_IP" ]]; then
-        DETECTED_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
+        DETECTED_IP=$(echo "${ALL_IPS}" | awk '{print $1}' | xargs)
     fi
     
     if [[ -n "$DETECTED_IP" ]]; then
