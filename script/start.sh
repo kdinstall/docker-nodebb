@@ -327,6 +327,17 @@ if [[ -z "$DOMAIN_NAME" ]]; then
     # Get all IPs from hostname -I
     ALL_IPS=$(hostname -I 2>/dev/null | xargs)
     
+    # If hostname -I failed, try alternative methods
+    if [[ -z "$ALL_IPS" ]]; then
+        # Try ip addr show
+        ALL_IPS=$(ip addr show 2>/dev/null | grep -oP 'inet \K[\d.]+' | grep -v '^127\.' | xargs)
+    fi
+    
+    if [[ -z "$ALL_IPS" ]]; then
+        # Try hostname -i as last resort
+        ALL_IPS=$(hostname -i 2>/dev/null | xargs)
+    fi
+    
     # Try to detect private IP (192.168.x.x) first
     DETECTED_IP=$(echo "${ALL_IPS}" | tr ' ' '\n' | grep -E '^192\.168\.' | head -n 1 | xargs)
     
