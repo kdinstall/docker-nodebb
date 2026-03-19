@@ -336,21 +336,22 @@ if [[ -z "$DOMAIN_NAME" ]]; then
     if [[ -z "$ALL_IPS" ]]; then
         echo "DEBUG: hostname -I was empty, trying ip addr show..."
         # Try ip addr show
-        ALL_IPS=$(ip addr show 2>/dev/null | grep -oP 'inet \K[\d.]+' | grep -v '^127\.' | xargs)
+        ALL_IPS=$(ip addr show 2>/dev/null | grep -oP 'inet \K[\d.]+' | grep -v '^127\.' | xargs || true)
         echo "DEBUG: ip addr show result: [${ALL_IPS}]"
     fi
     
     if [[ -z "$ALL_IPS" ]]; then
         echo "DEBUG: ip addr show was empty, trying hostname -i..."
         # Try hostname -i as last resort
-        ALL_IPS=$(hostname -i 2>/dev/null | xargs)
+        ALL_IPS=$(hostname -i 2>/dev/null | xargs || true)
         echo "DEBUG: hostname -i result: [${ALL_IPS}]"
     fi
     
     echo "DEBUG: Final ALL_IPS value: [${ALL_IPS}]"
     
     # Try to detect private IP (192.168.x.x) first
-    DETECTED_IP=$(echo "${ALL_IPS}" | tr ' ' '\n' | grep -E '^192\.168\.' | head -n 1 | xargs)
+    # Use || true to prevent set -e from exiting when grep finds no match
+    DETECTED_IP=$(echo "${ALL_IPS}" | tr ' ' '\n' | grep -E '^192\.168\.' | head -n 1 | xargs || true)
     echo "DEBUG: DETECTED_IP after private IP check: [${DETECTED_IP}]"
     
     # If no private IP, use the first available IP
