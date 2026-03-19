@@ -79,6 +79,7 @@ save_config() {
 # Created: $(date)
 DOMAIN_NAME="$DOMAIN_NAME"
 ADMIN_EMAIL="$ADMIN_EMAIL"
+DETECTED_IP="$DETECTED_IP"
 EOF
     chmod 600 "$CONFIG_FILE"
     log_info "Configuration saved to $CONFIG_FILE"
@@ -220,13 +221,18 @@ log_info "${filename} unarchived"
 # Configuration management
 DOMAIN_NAME=""
 ADMIN_EMAIL=""
+DETECTED_IP=""
 CONFIG_LOADED=false
 
 # Load existing configuration
 if load_config && [ "$RECONFIGURE" = false ]; then
     CONFIG_LOADED=true
     log_step "Previous configuration found"
-    log_info "  Domain: ${DOMAIN_NAME:-<not set>}"
+    if [[ -z "$DOMAIN_NAME" && -n "$DETECTED_IP" ]]; then
+        log_info "  Domain: <not set> (Using IP: ${DETECTED_IP})"
+    else
+        log_info "  Domain: ${DOMAIN_NAME:-<not set>}"
+    fi
     log_info "  Email:  ${ADMIN_EMAIL:-<not set>}"
     echo
     read -r -p "Use this configuration? [Y/n]: " USE_PREV < /dev/tty
@@ -328,7 +334,6 @@ if [[ -z "$DOMAIN_NAME" ]]; then
     fi
     
     if [[ -n "$DETECTED_IP" ]]; then
-        DOMAIN_NAME="${DETECTED_IP}"
         log_info "Using IP address: ${DETECTED_IP}"
         log_warn "Note: Self-signed certificate will be used (Let's Encrypt is disabled for IP addresses)"
     else
@@ -349,7 +354,7 @@ ansible-galaxy install -r requirements.yml
 ansible-galaxy collection install -r requirements.yml
 
 ansible-playbook -i localhost, -c local main.yml \
-  -e "default_domain_name=${DOMAIN_NAME}" \
+  -e "default_domain_name=${DOMAIN_NAME:-${DETECTED_IP}}" \
   -e "admin_email=${ADMIN_EMAIL}" \
   -e "certbot_enabled=${CERTBOT_ENABLED}" \
   -e "certbot_email=${CERTBOT_EMAIL}"
